@@ -212,6 +212,8 @@ function App() {
       
       <Assistant 
         currentContext={getCurrentContext()} 
+        // Pass the actual project object for smarter suggestions
+        activeProject={view.type === 'project' ? view.project : undefined}
         onNavigate={(sectionId) => handleNavClick(null, sectionId)}
         initialMessage={aiTrigger.message}
         forceOpen={aiTrigger.open}

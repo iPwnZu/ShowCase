@@ -37,6 +37,66 @@ const CAREER_MILESTONES = [
     }
 ];
 
+// Enhanced Skills Data with proficiency levels
+const SKILL_CATEGORIES = [
+  {
+    title: "Frontend & Architecture",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+      </svg>
+    ),
+    skills: [
+      { name: "React / Next.js", level: 98 },
+      { name: "TypeScript Architecture", level: 95 },
+      { name: "Tailwind / Design Systems", level: 95 },
+      { name: "Performance Optimization", level: 90 }
+    ]
+  },
+  {
+    title: "Backend & Cloud",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+      </svg>
+    ),
+    skills: [
+      { name: "Node.js / NestJS", level: 92 },
+      { name: "Python / FastAPI", level: 85 },
+      { name: "PostgreSQL / SQL", level: 88 },
+      { name: "Docker / Vercel CI/CD", level: 85 }
+    ]
+  },
+  {
+    title: "Creative & WebXR",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+      </svg>
+    ),
+    skills: [
+      { name: "Three.js / R3F", level: 90 },
+      { name: "WebGL / Shaders", level: 82 },
+      { name: "UI/UX Motion", level: 94 },
+      { name: "Generative Art", level: 80 }
+    ]
+  },
+  {
+    title: "AI & Innovation",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+      </svg>
+    ),
+    skills: [
+      { name: "Gemini / OpenAI API", level: 95 },
+      { name: "RAG & Vector DBs", level: 85 },
+      { name: "AI Agent Architecture", level: 90 },
+      { name: "Prompt Engineering", level: 92 }
+    ]
+  }
+];
+
 const About: React.FC = () => {
   return (
     <section id="about" className="bg-[#EBE7DE]">
@@ -136,48 +196,39 @@ const About: React.FC = () => {
                 </div>
             </div>
 
-            {/* Technical Expertise Grid */}
+            {/* Technical Expertise Visual Grid */}
             <div className="lg:col-span-7 lg:pl-12">
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#A8A29E] mb-6 block">Expertíza</span>
                 <h3 className="text-3xl font-serif text-[#2C2A26] mb-8 md:mb-12">Technický Stack</h3>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 md:gap-y-12">
-                    <div>
-                        <h4 className="font-serif text-lg text-[#2C2A26] mb-4 border-b border-[#D6D1C7] pb-2">Frontend & UI</h4>
-                        <ul className="space-y-2 text-[#5D5A53] font-light">
-                            <li>React / Next.js (Architecture)</li>
-                            <li>TypeScript / ESNext</li>
-                            <li>Tailwind CSS / Styled Components</li>
-                            <li>Framer Motion / GSAP Animations</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="font-serif text-lg text-[#2C2A26] mb-4 border-b border-[#D6D1C7] pb-2">Backend & Cloud</h4>
-                        <ul className="space-y-2 text-[#5D5A53] font-light">
-                            <li>Node.js / Express / NestJS</li>
-                            <li>Python (FastAPI / Django)</li>
-                            <li>PostgreSQL / MongoDB / Redis</li>
-                            <li>Docker / AWS / Vercel</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="font-serif text-lg text-[#2C2A26] mb-4 border-b border-[#D6D1C7] pb-2">Creative & WebXR</h4>
-                        <ul className="space-y-2 text-[#5D5A53] font-light">
-                            <li>Three.js / React Three Fiber</li>
-                            <li>WebGL / GLSL Shaders</li>
-                            <li>Generative Design (p5.js)</li>
-                            <li>Immersive Web Experiences</li>
-                        </ul>
-                    </div>
-                     <div>
-                        <h4 className="font-serif text-lg text-[#2C2A26] mb-4 border-b border-[#D6D1C7] pb-2">AI & Innovations</h4>
-                        <ul className="space-y-2 text-[#5D5A53] font-light">
-                            <li>Gemini API Integration</li>
-                            <li>TensorFlow.js</li>
-                            <li>AI-Driven UX/UI Patterns</li>
-                            <li>Prompt Engineering & RAG</li>
-                        </ul>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-12">
+                    {SKILL_CATEGORIES.map((category, idx) => (
+                        <div key={idx} className="group">
+                             <div className="flex items-center gap-3 mb-6 border-b border-[#D6D1C7] pb-2">
+                                <span className="text-[#2C2A26]">{category.icon}</span>
+                                <h4 className="font-serif text-lg text-[#2C2A26]">{category.title}</h4>
+                             </div>
+                             <div className="space-y-6">
+                                {category.skills.map((skill, sIdx) => (
+                                    <div key={sIdx}>
+                                        <div className="flex justify-between items-end mb-2">
+                                            <span className="text-sm font-medium text-[#5D5A53]">{skill.name}</span>
+                                            <span className="text-xs text-[#A8A29E] font-mono">{skill.level}%</span>
+                                        </div>
+                                        <div className="w-full h-1 bg-[#D6D1C7]/50 overflow-hidden rounded-full">
+                                            <div 
+                                                className="h-full bg-[#2C2A26] transition-all duration-[1.5s] ease-out rounded-full"
+                                                style={{ 
+                                                    width: `${skill.level}%`,
+                                                    transitionDelay: `${(idx * 200) + (sIdx * 100)}ms`
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                             </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

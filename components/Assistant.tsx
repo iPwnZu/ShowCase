@@ -5,17 +5,18 @@
 */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage } from '../types';
+import { ChatMessage, Project } from '../types';
 import { sendMessageToGemini } from '../services/geminiService';
 
 interface AssistantProps {
   currentContext: string;
+  activeProject?: Project; // Prop for deep contextual suggestions
   onNavigate: (sectionId: string) => void;
   initialMessage?: string; // Allow triggering with a message
   forceOpen?: boolean;     // Allow opening from parent
 }
 
-const Assistant: React.FC<AssistantProps> = ({ currentContext, onNavigate, initialMessage, forceOpen }) => {
+const Assistant: React.FC<AssistantProps> = ({ currentContext, activeProject, onNavigate, initialMessage, forceOpen }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'model', text: 'Dobrý den! Jsem AI asistent Františka Kaláška. Mohu provést technickou analýzu projektů, diskutovat o architektuře nebo vás navigovat. Jak vám mohu pomoci?', timestamp: Date.now() }
@@ -47,21 +48,29 @@ const Assistant: React.FC<AssistantProps> = ({ currentContext, onNavigate, initi
     }
   }, [messages, isOpen, isThinking]);
 
-  // Dynamic suggestions based on context string
+  // Dynamic suggestions based on context string and active project
   const getSuggestions = () => {
-      if (currentContext.includes('WebXR') || currentContext.includes('Virtual Moravia')) {
-          return ["Analyzuj tech stack", "Výzvy WebGL?", "Jaká je business hodnota?"];
+      // 1. Detailed Project Context
+      if (activeProject) {
+          const tech = activeProject.techStack[0];
+          return [
+              `Proč jsi použil ${tech}?`,
+              `Architektura: ${activeProject.name}?`,
+              `Výzvy v kategorii ${activeProject.category}?`,
+              `Business hodnota?`
+          ];
       }
-      if (currentContext.includes('AI') || currentContext.includes('Filling Pieces')) {
-          return ["Vysvětli AI model", "Generativní design?", "Tech stack?"];
+
+      // 2. Section Context
+      if (currentContext.includes('WebXR') || currentContext.includes('showcase')) {
+          return ["Nejnovější WebXR projekt?", "Vysvětli rozdíl WebGL vs WebXR", "Ukaž mi AI projekty"];
       }
-      if (currentContext.includes('Dashboard')) {
-          return ["Optimalizace výkonu?", "React architektura", "Data vizualizace"];
+      if (currentContext.includes('Kontakt')) {
+          return ["Jaká je dostupnost?", "Kde František sídlí?", "Spolupráce na projektu"];
       }
-      if (currentContext.includes('hlavní stránce')) {
-          return ["Kdo je František?", "Ukaž portfolio", "Kontakt"];
-      }
-      return ["Dovednosti", "Zkušenosti", "Kontakt"];
+      
+      // 3. General / Home
+      return ["Kdo je František?", "Shrň dovednosti", "Naviguj na Kontakt", "Co je WebXR?"];
   };
 
   const handleSend = async (text: string = inputValue) => {
