@@ -15,6 +15,7 @@ export interface Project {
   imageUrl: string;
   galleryImages?: string[];
   link?: string;
+  modelUrl?: string; // URL to .glb/.gltf 3D model
   category: 'WebXR' | 'AI' | 'Web' | 'Design';
 }
 
@@ -27,7 +28,8 @@ export interface ChatMessage {
 
 export type ViewState = 
   | { type: 'home' }
-  | { type: 'project', project: Project };
+  | { type: 'project', project: Project }
+  | { type: 'family-tree' };
 
 export interface Product {
   id: string;
@@ -58,4 +60,19 @@ export interface GeminiResponse {
   text: string;
   sources?: { title: string; uri: string }[];
   toolCalls?: GeminiToolCall[];
+}
+
+// Genealogy Types
+export interface FamilyMember {
+  id: string;
+  name: string;
+  birthDate?: string;
+  deathDate?: string;
+  birthPlace?: string;
+  bio?: string;
+  // IDs of related members
+  parents: string[]; 
+  children: string[];
+  spouses: string[];
+  generation?: number; // Calculated for visualization
 }

@@ -1,11 +1,37 @@
+
 <!DOCTYPE html>
 <html lang="cs">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TopBot.PwnZ™ | František Kalášek</title>
-    <meta name="description" content="Tvořím úchvatný grafický design a inovativní kód." />
+    
+    <!-- Primary Meta Tags -->
+    <title>TopBot.PwnZ™ - František Kalášek</title>
+    <meta name="title" content="TopBot.PwnZ™ - František Kalášek" />
+    <meta name="description" content="Portfolio Senior Web Developera a Software Architekta Františka Kaláška." />
+    <meta name="author" content="František Kalášek" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://topbot.pwnz.dev/" />
+    <meta property="og:title" content="TopBot.PwnZ™ - František Kalášek" />
+    <meta property="og:description" content="Portfolio Senior Web Developera a Software Architekta Františka Kaláška." />
+    <meta property="og:image" content="https://ik.imagekit.io/ipwnzu/IMG_0021(1).PNG?updatedAt=1763676215389" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://topbot.pwnz.dev/" />
+    <meta property="twitter:title" content="TopBot.PwnZ™ - František Kalášek" />
+    <meta property="twitter:description" content="Portfolio Senior Web Developera a Software Architekta Františka Kaláška." />
+    <meta property="twitter:image" content="https://ik.imagekit.io/ipwnzu/IMG_0021(1).PNG?updatedAt=1763676215389" />
+
+    <!-- Performance Performance -->
+    <link rel="preconnect" href="https://images.unsplash.com">
+    <link rel="preconnect" href="https://ajax.googleapis.com">
+    <link rel="preconnect" href="https://modelviewer.dev">
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap');
       
@@ -49,6 +75,12 @@
       .animate-slide-up-fade {
         animation: slide-up-fade 0.5s ease-out forwards;
       }
+      
+      /* Model Viewer Customization */
+      model-viewer {
+        background-color: transparent;
+        --poster-color: transparent;
+      }
     </style>
   <script type="importmap">
 {
@@ -56,7 +88,8 @@
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
   }
 }
 </script>

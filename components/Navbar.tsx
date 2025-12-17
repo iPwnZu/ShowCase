@@ -30,6 +30,13 @@ const Navbar: React.FC<NavbarProps> = ({ onNavClick }) => {
 
   const textColorClass = (scrolled || mobileMenuOpen) ? 'text-[#2C2A26]' : 'text-[#2C2A26] md:text-[#F5F2EB]';
 
+  // Navigation Data Structure - Simplified
+  const NAV_ITEMS = [
+    { id: 'home', label: 'Domů' },
+    { id: 'about', label: 'O mně' },
+    { id: 'contact', label: 'Kontakt' }
+  ];
+
   return (
     <>
       <nav 
@@ -53,10 +60,16 @@ const Navbar: React.FC<NavbarProps> = ({ onNavClick }) => {
           
           {/* Center Links - Desktop */}
           <div className={`hidden md:flex items-center gap-12 text-sm font-medium tracking-widest uppercase transition-colors duration-500 ${textColorClass}`}>
-            <a href="#home" onClick={(e) => handleLinkClick(e, 'home')} className="hover:opacity-60 transition-opacity">Domů</a>
-            <a href="#about" onClick={(e) => handleLinkClick(e, 'about')} className="hover:opacity-60 transition-opacity">O mně</a>
-            <a href="#showcase" onClick={(e) => handleLinkClick(e, 'showcase')} className="hover:opacity-60 transition-opacity">WebXR Showcase</a>
-            <a href="#contact" onClick={(e) => handleLinkClick(e, 'contact')} className="hover:opacity-60 transition-opacity">Kontakt</a>
+            {NAV_ITEMS.map((item) => (
+                <a 
+                    key={item.id}
+                    href={`#${item.id}`} 
+                    onClick={(e) => handleLinkClick(e, item.id)} 
+                    className="hover:opacity-60 transition-opacity"
+                >
+                    {item.label}
+                </a>
+            ))}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -65,7 +78,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavClick }) => {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
               {mobileMenuOpen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 animate-pulse">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               ) : (
@@ -77,15 +90,27 @@ const Navbar: React.FC<NavbarProps> = ({ onNavClick }) => {
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
-      <div className={`fixed inset-0 bg-[#F5F2EB] z-40 flex flex-col justify-center items-center transition-all duration-500 ease-in-out ${
-          mobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-10 pointer-events-none'
+      {/* Mobile Menu Overlay - Slide from Left with Staggered Items */}
+      <div className={`fixed inset-0 bg-[#F5F2EB] z-40 flex flex-col justify-center items-center transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${
+          mobileMenuOpen ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 -translate-x-full pointer-events-none'
       }`}>
           <div className="flex flex-col items-center space-y-8 text-xl font-serif font-medium text-[#2C2A26]">
-            <a href="#home" onClick={(e) => handleLinkClick(e, 'home')} className="hover:opacity-60 transition-opacity">Domů</a>
-            <a href="#about" onClick={(e) => handleLinkClick(e, 'about')} className="hover:opacity-60 transition-opacity">O mně</a>
-            <a href="#showcase" onClick={(e) => handleLinkClick(e, 'showcase')} className="hover:opacity-60 transition-opacity">WebXR Showcase</a>
-            <a href="#contact" onClick={(e) => handleLinkClick(e, 'contact')} className="hover:opacity-60 transition-opacity">Kontakt</a>
+            {NAV_ITEMS.map((item, idx) => (
+                <a 
+                    key={item.id}
+                    href={`#${item.id}`} 
+                    onClick={(e) => handleLinkClick(e, item.id)} 
+                    className={`
+                        hover:opacity-60 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]
+                        ${mobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
+                    `}
+                    style={{ 
+                        transitionDelay: mobileMenuOpen ? `${150 + (idx * 100)}ms` : '0ms' 
+                    }}
+                >
+                    {item.label}
+                </a>
+            ))}
           </div>
       </div>
     </>

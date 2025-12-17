@@ -8,20 +8,47 @@ import React, { useState, useMemo } from 'react';
 import { PRODUCTS } from '../constants';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
+import ProductDetail from './ProductDetail';
 
 const categories = ['All', 'Audio', 'Wearable', 'Mobile', 'Home'];
 
 interface ProductGridProps {
-  onProductClick: (product: Product) => void;
+  onProductClick?: (product: Product) => void;
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ onProductClick }) => {
   const [activeCategory, setActiveCategory] = useState('All');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const filteredProducts = useMemo(() => {
     if (activeCategory === 'All') return PRODUCTS;
     return PRODUCTS.filter(p => p.category === activeCategory);
   }, [activeCategory]);
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+    if (onProductClick) {
+        onProductClick(product);
+    }
+  };
+
+  const handleBack = () => {
+    setSelectedProduct(null);
+  };
+
+  const handleAddToCart = (product: Product) => {
+    alert(`Produkt "${product.name}" byl přidán do košíku. (Demo)`);
+  };
+
+  if (selectedProduct) {
+      return (
+          <ProductDetail 
+            product={selectedProduct} 
+            onBack={handleBack} 
+            onAddToCart={handleAddToCart}
+          />
+      );
+  }
 
   return (
     <section id="products" className="py-32 px-6 md:px-12 bg-[#F5F2EB]">
@@ -52,7 +79,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ onProductClick }) => {
         {/* Large Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-20">
           {filteredProducts.map(product => (
-            <ProductCard key={product.id} product={product} onClick={onProductClick} />
+            <ProductCard key={product.id} product={product} onClick={handleProductClick} />
           ))}
         </div>
       </div>

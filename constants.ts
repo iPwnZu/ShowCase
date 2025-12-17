@@ -16,6 +16,8 @@ export const PROJECTS: Project[] = [
     category: 'WebXR',
     // ImageKit URL
     imageUrl: 'https://ik.imagekit.io/ipwnzu/Virtual.png',
+    // Public sample model for demo purposes (Astronaut)
+    modelUrl: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
   },
   {
     id: 'p2',
@@ -26,6 +28,8 @@ export const PROJECTS: Project[] = [
     category: 'AI',
     // ImageKit URL
     imageUrl: 'https://ik.imagekit.io/ipwnzu/Fill.png',
+    // Public sample model (Robot Expressive)
+    modelUrl: 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb'
   },
   {
     id: 'p3',
@@ -46,6 +50,8 @@ export const PROJECTS: Project[] = [
     category: 'Design',
     // ImageKit URL - Updated
     imageUrl: 'https://ik.imagekit.io/ipwnzu/Gemini_Generated_Image_8pyicl8pyicl8pyi.png',
+    // Public sample model (Abstract/Alpha Blend)
+    modelUrl: 'https://modelviewer.dev/shared-assets/models/glTF-Sample-Models/2.0/AlphaBlendModeTest/glTF-Binary/AlphaBlendModeTest.glb'
   }
 ];
 
