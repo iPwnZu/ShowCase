@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { BRAND_NAME } from '../constants';
+import { BRAND_NAME, EMAIL, SOCIAL_LINKS } from '../constants';
 import { analyzeNetworkNode } from '../services/geminiService';
 
 // --- Types & Interfaces ---
@@ -49,57 +49,81 @@ const Icons = {
   Terminal: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>,
   User: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
   Cpu: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>,
-  Database: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+  Database: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>,
+  Verify: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>,
+  Shield: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
 };
 
 // --- Sub-Component: Identity View ---
 const IdentityView: React.FC = () => {
     const [systemInfo, setSystemInfo] = useState<any>(null);
     const [scanning, setScanning] = useState(true);
-    const [uptime, setUptime] = useState('00:00:00');
+    const [uptime, setUptime] = useState('00:00:00:00');
     const [cpuLoad, setCpuLoad] = useState(12);
 
     useEffect(() => {
-        const startTime = Date.now() - (Math.random() * 500000000); 
+        // Define a static start time for this session (simulated long-term uptime)
+        const sessionStartTime = Date.now() - (Math.random() * 86400000 * 5); // Randomly 1-5 days ago
         
         const fetchHardwareData = async () => {
-            let storageData = { quota: 'N/A', usage: 'N/A', percent: 0 };
+            let storageData = { quota: 'N/A', usage: 'N/A', percent: 0, rawQuota: 0 };
             try {
                 if (navigator.storage && navigator.storage.estimate) {
                     const estimate = await navigator.storage.estimate();
-                    if (estimate.quota && estimate.usage) {
-                        const qGb = (estimate.quota / (1024 ** 3)).toFixed(1);
-                        const uGb = (estimate.usage / (1024 ** 3)).toFixed(1);
-                        storageData = { quota: `${qGb} GB`, usage: `${uGb} GB`, percent: Math.round((estimate.usage / estimate.quota) * 100) };
+                    if (estimate.quota !== undefined && estimate.usage !== undefined) {
+                        const qGb = (estimate.quota / (1024 ** 3)).toFixed(2);
+                        const uGb = (estimate.usage / (1024 ** 3)).toFixed(2);
+                        storageData = { 
+                          quota: `${qGb} GB`, 
+                          usage: `${uGb} GB`, 
+                          rawQuota: estimate.quota,
+                          percent: Math.round((estimate.usage / estimate.quota) * 100) 
+                        };
                     }
                 }
             } catch (e) { console.error(e); }
 
-            let batteryInfo = 'N/A';
+            let batteryInfo = 'AC Connection';
             try {
                 if ((navigator as any).getBattery) {
                     const battery = await (navigator as any).getBattery();
                     batteryInfo = `${Math.round(battery.level * 100)}% (${battery.charging ? 'Charging' : 'Discharging'})`;
                 }
-            } catch (e) { batteryInfo = 'N/A'; }
+            } catch (e) { }
 
             setSystemInfo({
-                user: { name: 'František Kalášek', nickname: 'pwnz-admin', role: 'Chief Architect', node: 'CZ-BRNO-01' },
-                hardware: { cores: navigator.hardwareConcurrency || 'N/A', memory: (performance as any).memory ? `${Math.round((performance as any).memory.jsHeapSizeLimit / (1024 ** 2))} MB (Limit)` : 'N/A', platform: navigator.platform, gpu: 'WebGL 2.0 Accel', battery: batteryInfo },
+                user: { name: 'František Kalášek', nickname: 'pwnz-admin', role: 'Chief Architect', node: 'CZ-BRNO-54' },
+                hardware: { 
+                  cores: navigator.hardwareConcurrency || 'N/A', 
+                  memory: (performance as any).memory ? `${Math.round((performance as any).memory.jsHeapSizeLimit / (1024 ** 2))} MB` : 'Dynamic', 
+                  platform: navigator.platform, 
+                  arch: navigator.userAgent.includes('x64') ? 'x86_64' : navigator.userAgent.includes('arm') ? 'arm64' : 'Universal',
+                  resolution: `${window.screen.width}x${window.screen.height}`,
+                  gpu: 'WebGL 2.0 (High Performance)'
+                },
                 storage: storageData,
-                browser: { agent: navigator.userAgent.split(') ')[1]?.split(' ')[0] || 'Modern Browser', lang: navigator.language }
+                browser: { 
+                  name: navigator.userAgent.split(') ')[1]?.split(' ')[0] || 'Chromium-based', 
+                  lang: navigator.language,
+                  online: navigator.onLine ? 'ESTABLISHED' : 'DISCONNECTED'
+                }
             });
             setScanning(false);
         };
 
         const interval = setInterval(() => {
-            const diff = Date.now() - startTime;
+            const diff = Date.now() - sessionStartTime;
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const secs = Math.floor((diff % (1000 * 60)) / 1000);
             setUptime(`${days}d ${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`);
-            setCpuLoad(prev => Math.max(2, Math.min(99, Math.round(prev + (Math.random() * 8 - 4)))));
+            
+            // Random jitter for CPU load
+            setCpuLoad(prev => {
+              const jitter = Math.random() * 4 - 2;
+              return Math.max(5, Math.min(95, Math.round(prev + jitter)));
+            });
         }, 1000);
 
         fetchHardwareData();
@@ -107,53 +131,123 @@ const IdentityView: React.FC = () => {
     }, []);
 
     if (scanning) return (
-        <div className="flex flex-col items-center justify-center h-full gap-6">
-            <div className="relative">
-                <div className="w-16 h-16 border border-indigo-500/20 rounded-full animate-ping"></div>
-                <div className="absolute inset-0 w-16 h-16 border-2 border-transparent border-t-indigo-400 rounded-full animate-spin"></div>
+        <div className="flex flex-col items-center justify-center h-full gap-8">
+            <div className="relative w-24 h-24">
+                <div className="absolute inset-0 border border-indigo-500/20 rounded-full animate-ping"></div>
+                <div className="absolute inset-0 border-2 border-transparent border-t-indigo-400 rounded-full animate-spin"></div>
+                <div className="absolute inset-4 border border-indigo-500/10 rounded-full animate-pulse"></div>
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/40">Biometric Scan in Progress</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.5em] text-indigo-400/60 animate-pulse">Synchronizing Telemetry...</div>
         </div>
     );
 
     return (
-        <div className="p-8 md:p-12 h-full overflow-y-auto no-scrollbar animate-fade-in-up bg-gradient-to-b from-transparent to-indigo-950/10">
-            <div className="flex flex-col md:flex-row items-center gap-8 mb-12 p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 backdrop-blur-md">
-                <div className="w-24 h-24 rounded-full border-2 border-indigo-500/30 p-1 bg-indigo-500/10 flex items-center justify-center relative">
+        <div className="p-8 md:p-14 h-full overflow-y-auto no-scrollbar animate-fade-in-up bg-gradient-to-b from-transparent to-indigo-950/5">
+            {/* Top Identity Bar */}
+            <div className="flex flex-col md:flex-row items-center gap-10 mb-14 p-10 rounded-[3rem] bg-white/[0.02] border border-white/5 backdrop-blur-3xl relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent"></div>
+                <div className="w-28 h-28 rounded-[2rem] border-2 border-indigo-500/20 p-1.5 bg-indigo-500/5 flex items-center justify-center relative shadow-[0_0_30px_rgba(99,102,241,0.1)]">
                     <Icons.User />
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-slate-900 animate-pulse"></div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-2xl border-4 border-[#0a0a14] flex items-center justify-center shadow-lg">
+                        <Icons.Verify />
+                    </div>
                 </div>
                 <div className="text-center md:text-left">
-                    <h2 className="text-3xl font-serif text-white mb-1">{systemInfo.user.name}</h2>
-                    <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-2">
-                        <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest rounded-full">{systemInfo.user.nickname}</span>
-                        <span className="px-3 py-1 bg-white/5 text-white/40 text-[10px] font-bold uppercase tracking-widest rounded-full">{systemInfo.user.role}</span>
+                    <h2 className="text-4xl font-serif text-white mb-2 tracking-tight">{systemInfo.user.name}</h2>
+                    <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-3">
+                        <span className="px-4 py-1.5 bg-indigo-500/10 text-indigo-300 text-[9px] font-bold uppercase tracking-[0.2em] rounded-full border border-indigo-500/20">{systemInfo.user.nickname}</span>
+                        <span className="px-4 py-1.5 bg-white/5 text-white/40 text-[9px] font-bold uppercase tracking-[0.2em] rounded-full border border-white/5">{systemInfo.user.role}</span>
+                        <span className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 text-[9px] font-bold uppercase tracking-[0.2em] rounded-full border border-emerald-500/20">Node: {systemInfo.user.node}</span>
                     </div>
                 </div>
                 <div className="md:ml-auto text-right">
-                    <span className="block text-[9px] font-bold uppercase tracking-widest text-indigo-400 mb-1">Session Uptime</span>
-                    <span className="text-2xl font-mono text-white/80">{uptime}</span>
+                    <span className="block text-[8px] font-bold uppercase tracking-[0.4em] text-indigo-400/60 mb-2">SYSTEM UPTIME</span>
+                    <span className="text-3xl font-mono text-white/90 tracking-tighter">{uptime}</span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 group hover:bg-white/[0.06] transition-all">
-                    <div className="flex justify-between items-center mb-6"><span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">CPU LOAD</span><Icons.Cpu /></div>
-                    <div className="flex items-end gap-3 mb-4"><span className="text-4xl font-mono text-white">{cpuLoad}%</span></div>
-                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden"><div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: `${cpuLoad}%` }}></div></div>
-                </div>
-                <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 group hover:bg-white/[0.06] transition-all">
-                    <div className="flex justify-between items-center mb-6"><span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">WEB STORAGE</span><Icons.Database /></div>
-                    <div className="flex items-end gap-3 mb-4"><span className="text-4xl font-mono text-white">{systemInfo.storage.usage}</span></div>
-                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${systemInfo.storage.percent}%` }}></div></div>
-                </div>
-                <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5">
-                    <span className="block text-[9px] font-bold uppercase tracking-widest text-indigo-400 mb-4">HARDWARE</span>
-                    <div className="space-y-3 text-xs">
-                        <div className="flex justify-between"><span className="text-white/40">Cores</span><span className="text-white">{systemInfo.hardware.cores}</span></div>
-                        <div className="flex justify-between"><span className="text-white/40">Platform</span><span className="text-white">{systemInfo.hardware.platform}</span></div>
-                        <div className="flex justify-between"><span className="text-white/40">Battery</span><span className="text-white">{systemInfo.hardware.battery}</span></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* CPU Metrics */}
+                <div className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 group hover:bg-white/[0.05] transition-all hover:border-indigo-500/20">
+                    <div className="flex justify-between items-center mb-8">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-400">Process Load</span>
+                        <Icons.Cpu />
                     </div>
+                    <div className="flex items-baseline gap-2 mb-6">
+                        <span className="text-5xl font-mono text-white">{cpuLoad}</span>
+                        <span className="text-sm font-mono text-white/20">%</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden mb-2">
+                        <div className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 transition-all duration-700 ease-out" style={{ width: `${cpuLoad}%` }}></div>
+                    </div>
+                    <div className="flex justify-between text-[8px] font-bold text-white/20 uppercase tracking-widest mt-4">
+                        <span>Idle</span>
+                        <span>Peak Capacity</span>
+                    </div>
+                </div>
+
+                {/* Storage Diagnostics */}
+                <div className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 group hover:bg-white/[0.05] transition-all hover:border-emerald-500/20">
+                    <div className="flex justify-between items-center mb-8">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400">Quota Usage</span>
+                        <Icons.Database />
+                    </div>
+                    <div className="flex flex-col gap-1 mb-6">
+                        <span className="text-4xl font-mono text-white">{systemInfo.storage.usage}</span>
+                        <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">of {systemInfo.storage.quota} allocated</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden mb-2">
+                        <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000 ease-in-out" style={{ width: `${systemInfo.storage.percent}%` }}></div>
+                    </div>
+                    <div className="flex justify-between text-[8px] font-bold text-white/20 uppercase tracking-widest mt-4">
+                        <span>{systemInfo.storage.percent}% Consumption</span>
+                        <span>Persistent Store</span>
+                    </div>
+                </div>
+
+                {/* Environment Table */}
+                <div className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/5 lg:col-span-1">
+                    <span className="block text-[8px] font-bold uppercase tracking-[0.4em] text-indigo-400 mb-6">ENVIRONMENTALS</span>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center py-2 border-b border-white/5">
+                            <span className="text-[10px] text-white/40 uppercase tracking-widest">Architecture</span>
+                            <span className="text-xs font-mono text-white">{systemInfo.hardware.arch}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b border-white/5">
+                            <span className="text-[10px] text-white/40 uppercase tracking-widest">Native Platform</span>
+                            <span className="text-xs font-mono text-white truncate max-w-[120px]">{systemInfo.hardware.platform}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b border-white/5">
+                            <span className="text-[10px] text-white/40 uppercase tracking-widest">Resolution</span>
+                            <span className="text-xs font-mono text-white">{systemInfo.hardware.resolution}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b border-white/5">
+                            <span className="text-[10px] text-white/40 uppercase tracking-widest">Uplink Status</span>
+                            <span className={`text-[9px] font-bold uppercase tracking-widest ${systemInfo.browser.online === 'ESTABLISHED' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {systemInfo.browser.online}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Hardware Footer Info */}
+            <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6 p-6 rounded-3xl bg-black/20 border border-white/5">
+                <div>
+                    <span className="block text-[8px] text-white/20 uppercase font-bold mb-1">Processor Cores</span>
+                    <span className="text-xs text-white/80 font-mono">{systemInfo.hardware.cores} Logical Units</span>
+                </div>
+                <div>
+                    <span className="block text-[8px] text-white/20 uppercase font-bold mb-1">Assigned Heap</span>
+                    <span className="text-xs text-white/80 font-mono">{systemInfo.hardware.memory}</span>
+                </div>
+                <div>
+                    <span className="block text-[8px] text-white/20 uppercase font-bold mb-1">Engine Language</span>
+                    <span className="text-xs text-white/80 font-mono">{systemInfo.browser.lang}</span>
+                </div>
+                <div>
+                    <span className="block text-[8px] text-white/20 uppercase font-bold mb-1">Rendering Pipeline</span>
+                    <span className="text-xs text-white/80 font-mono">{systemInfo.hardware.gpu}</span>
                 </div>
             </div>
         </div>
@@ -352,8 +446,8 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose, onToggleSnow }) =>
   const [activeTab, setActiveTab] = useState<SystemTab>('TERMINAL');
   const [inputLine, setInputLine] = useState('');
   const [lines, setLines] = useState<TerminalLine[]>([
-    { type: 'system', content: 'TopBot.Studio Shell v4.6.0-SECURE' },
-    { type: 'system', content: 'Topology Engine initialized. Trace "network" for global flux.' }
+    { type: 'system', content: 'TopBot.Studio Shell v4.8.2-PRIME' },
+    { type: 'system', content: 'Secure access established. User context: active.' }
   ]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -363,59 +457,155 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose, onToggleSnow }) =>
       const clean = cmd.trim().toLowerCase();
       if (!clean) return;
       setLines(p => [...p, { type: 'input', content: cmd }]);
-      if (clean === 'help') {
+      
+      if (clean === 'sudo rm -rf /') {
+          setLines(p => [...p, { type: 'error', content: 'Permission denied: Operation not permitted on the root file system.' }]);
+      } else if (clean === 'ls') {
+          setLines(p => [...p, { type: 'output', content: (
+            <div className="flex gap-6 py-1 text-indigo-400 font-mono">
+                <span className="flex items-center gap-1"><Icons.Database /> whoami.txt</span>
+                <span className="flex items-center gap-1">projects/</span>
+                <span className="flex items-center gap-1 opacity-40">hidden.sys</span>
+            </div>
+          )}]);
+      } else if (clean === 'whoami' || clean === 'cat whoami.txt') {
+          setLines(p => [...p, { type: 'component', content: (
+            <div className="py-6 animate-fade-in-up">
+                <div className="max-w-xl bg-slate-900/60 rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl backdrop-blur-xl group hover:border-indigo-500/30 transition-all duration-500">
+                    <div className="relative h-32 bg-gradient-to-r from-indigo-900 via-slate-900 to-black overflow-hidden">
+                        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                        <div className="absolute top-4 right-6 flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                            <span className="text-[8px] font-bold text-emerald-400 uppercase tracking-widest">Identity Verified</span>
+                        </div>
+                    </div>
+                    <div className="relative px-8 pb-8 -mt-16">
+                        <div className="flex flex-col md:flex-row items-end gap-6 mb-8">
+                            <div className="relative w-32 h-32 rounded-3xl overflow-hidden border-4 border-slate-900 shadow-2xl bg-slate-800">
+                                <img 
+                                    src="https://ik.imagekit.io/ipwnzu/IMG_0021(1).PNG?updatedAt=1763676215389" 
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                    alt="František Kalášek" 
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/20 to-transparent"></div>
+                            </div>
+                            <div className="flex-1 pb-2">
+                                <h3 className="text-3xl font-serif text-white mb-1 tracking-tight">František Kalášek</h3>
+                                <div className="flex gap-3 items-center">
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-400">Node-Admin // Architect</span>
+                                    <div className="h-px flex-1 bg-white/5"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-mono">
+                            <div className="space-y-4">
+                                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5">
+                                    <span className="text-[8px] uppercase tracking-widest text-white/30 block mb-2">Primary Uplink</span>
+                                    <p className="text-xs text-indigo-200">{EMAIL}</p>
+                                </div>
+                                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5">
+                                    <span className="text-[8px] uppercase tracking-widest text-white/30 block mb-2">Location Hub</span>
+                                    <p className="text-xs text-indigo-200">Javorek, CZ (Central-EU)</p>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                                    <span className="text-[8px] uppercase tracking-widest text-white/30 block mb-3">Core Expertise</span>
+                                    <div className="space-y-2.5">
+                                        {[
+                                            { name: 'System Arch', val: 98 },
+                                            { name: 'Neural Int', val: 95 },
+                                            { name: 'XR Bridge', val: 92 }
+                                        ].map(s => (
+                                            <div key={s.name} className="flex flex-col gap-1.5">
+                                                <div className="flex justify-between text-[9px]">
+                                                    <span className="text-white/60">{s.name}</span>
+                                                    <span className="text-indigo-400">{s.val}%</span>
+                                                </div>
+                                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-indigo-500 rounded-full animate-progress" style={{ width: `${s.val}%` }}></div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-white/5 flex flex-wrap gap-4 items-center">
+                            <span className="text-[8px] font-bold uppercase tracking-[0.4em] text-white/20">Social Flux:</span>
+                            <div className="flex gap-4">
+                                {SOCIAL_LINKS.slice(0, 4).map(s => (
+                                    <a key={s.name} href={s.url} target="_blank" className="text-white/40 hover:text-indigo-400 transition-colors">
+                                        <span className="text-[9px] font-bold uppercase tracking-widest">{s.name}</span>
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          ) }]);
+      } else if (clean === 'help') {
           setLines(p => [...p, { type: 'output', content: (
               <div className="flex flex-col gap-2 py-2 font-mono text-[10px]">
-                  <div className="flex gap-4"><span className="w-16 text-indigo-400 font-bold">identity</span><span>System Profile</span></div>
-                  <div className="flex gap-4"><span className="w-16 text-indigo-400 font-bold">network</span><span>Advanced Flux Visualization</span></div>
-                  <div className="flex gap-4"><span className="w-16 text-indigo-400 font-bold">clear</span><span>Reset Log</span></div>
+                  <div className="flex gap-4"><span className="w-16 text-indigo-400 font-bold">whoami</span><span>Access encrypted user profile</span></div>
+                  <div className="flex gap-4"><span className="w-16 text-indigo-400 font-bold">identity</span><span>Display core hardware telemetry</span></div>
+                  <div className="flex gap-4"><span className="w-16 text-indigo-400 font-bold">network</span><span>Global flux visualization</span></div>
+                  <div className="flex gap-4"><span className="w-16 text-indigo-400 font-bold">ls</span><span>Enumerate local storage files</span></div>
+                  <div className="flex gap-4"><span className="w-16 text-indigo-400 font-bold">clear</span><span>Purge terminal session data</span></div>
+                  <div className="flex gap-4"><span className="w-16 text-indigo-400 font-bold">exit</span><span>Terminate shell environment</span></div>
               </div>
           )}]);
       } else if (clean === 'identity') setActiveTab('IDENTITY');
       else if (clean === 'network') setActiveTab('NETWORK');
       else if (clean === 'clear') setLines([]);
       else if (clean === 'exit') onClose();
-      else setLines(p => [...p, { type: 'error', content: `Unrecognized: ${cmd}` }]);
+      else setLines(p => [...p, { type: 'error', content: `Access Denied: Directive "${cmd}" not found in core binary.` }]);
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 overflow-hidden">
-        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={onClose}></div>
-        <div className="relative w-full max-w-6xl h-[92vh] md:h-[88vh] bg-[#12121e]/90 backdrop-blur-3xl rounded-[3rem] border border-white/10 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] flex flex-col overflow-hidden ring-1 ring-white/10 animate-fade-in-up">
-            <div className="h-16 flex items-center justify-between px-8 md:px-10 relative z-50 border-b border-white/5 bg-black/20">
+        <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md" onClick={onClose}></div>
+        <div className="relative w-full max-w-6xl h-[92vh] md:h-[88vh] bg-[#0a0a14]/90 backdrop-blur-3xl rounded-[3.5rem] border border-white/10 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] flex flex-col overflow-hidden ring-1 ring-white/10 animate-fade-in-up">
+            <div className="h-16 flex items-center justify-between px-10 relative z-50 border-b border-white/5 bg-black/40">
                 <div className="flex gap-3">
                     <button onClick={onClose} className="w-3 h-3 rounded-full bg-red-500/50 hover:bg-red-500 transition-colors border border-white/5" />
                     <div className="w-3 h-3 rounded-full bg-amber-500/50 border border-white/5" />
                     <div className="w-3 h-3 rounded-full bg-emerald-500/50 border border-white/5" />
                 </div>
-                <div className="absolute left-1/2 -translate-x-1/2 text-[10px] font-bold text-white/40 uppercase tracking-[0.7em] pointer-events-none flex items-center gap-2"><Icons.Terminal /> {BRAND_NAME}</div>
-                <div className="hidden sm:block text-[9px] font-bold text-white/10 tracking-widest uppercase">Kernel: Refracted-V4</div>
+                <div className="absolute left-1/2 -translate-x-1/2 text-[10px] font-bold text-white/30 uppercase tracking-[0.8em] pointer-events-none flex items-center gap-3"><Icons.Terminal /> {BRAND_NAME}</div>
+                <div className="hidden sm:flex items-center gap-3 text-[9px] font-bold text-white/10 tracking-widest uppercase">
+                   <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></div>
+                   Kernel: 4.8.2-Prime-LTS
+                </div>
             </div>
-            <div className="flex-1 flex flex-col overflow-hidden p-4 md:p-6 pt-4">
-                <div className="flex justify-center mb-6">
+            <div className="flex-1 flex flex-col overflow-hidden p-6 md:p-8 pt-6">
+                <div className="flex justify-center mb-8">
                     <div className="bg-black/40 p-1.5 rounded-2xl flex gap-1 border border-white/5">
                         {(['TERMINAL', 'IDENTITY', 'NETWORK'] as SystemTab[]).map(tab => (
-                            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative z-10 ${activeTab === tab ? 'text-white' : 'text-white/20 hover:text-white/40'}`}>
-                                {tab}{activeTab === tab && <div className="absolute inset-0 bg-white/[0.05] rounded-xl -z-10 border border-white/10 shadow-lg animate-fade-in-up"></div>}
+                            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-10 py-3 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative z-10 ${activeTab === tab ? 'text-white' : 'text-white/20 hover:text-white/40'}`}>
+                                {tab}{activeTab === tab && <div className="absolute inset-0 bg-indigo-500/10 rounded-xl -z-10 border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.1)] animate-fade-in-up"></div>}
                             </button>
                         ))}
                     </div>
                 </div>
-                <div className="flex-1 bg-black/40 rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl relative">
+                <div className="flex-1 bg-black/60 rounded-[3rem] border border-white/5 overflow-hidden shadow-inner relative ring-1 ring-inset ring-white/5">
                     {activeTab === 'TERMINAL' && (
-                        <div className="h-full p-8 md:p-12 font-mono text-sm overflow-y-auto no-scrollbar" onClick={() => document.getElementById('studio-cli')?.focus()}>
+                        <div className="h-full p-10 md:p-14 font-mono text-sm overflow-y-auto no-scrollbar scroll-smooth" onClick={() => document.getElementById('studio-cli')?.focus()}>
                             {lines.map((l, i) => (
-                                <div key={i} className="mb-2.5 flex items-start animate-fade-in-up">
-                                    {l.type === 'input' && <span className="text-indigo-400 mr-4 opacity-50">λ</span>}
-                                    {l.type === 'error' && <span className="text-red-500 mr-4 font-bold">!</span>}
-                                    <div className={`inline-block ${l.type === 'error' ? 'text-red-300' : l.type === 'system' ? 'text-slate-500' : 'text-slate-300'}`}>{l.content}</div>
+                                <div key={i} className="mb-4 flex items-start animate-fade-in-up">
+                                    {l.type === 'input' && <span className="text-indigo-400 mr-4 opacity-50 font-bold">#</span>}
+                                    {l.type === 'error' && <span className="text-red-500 mr-4 font-bold">✖</span>}
+                                    <div className={`inline-block ${l.type === 'error' ? 'text-red-400' : l.type === 'system' ? 'text-slate-500/80' : 'text-slate-200'}`}>{l.content}</div>
                                 </div>
                             ))}
-                            <div className="flex items-center mt-6">
-                                <span className="text-indigo-400 mr-4 animate-pulse">λ</span>
-                                <input id="studio-cli" type="text" value={inputLine} onChange={e => setInputLine(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { handleCommand(inputLine); setInputLine(''); } }} className="flex-1 bg-transparent border-none outline-none text-white/90 caret-indigo-500 font-mono tracking-wider" autoFocus autoComplete="off" spellCheck={false} />
+                            <div className="flex items-center mt-8">
+                                <span className="text-indigo-400 mr-4 animate-pulse font-bold">#</span>
+                                <input id="studio-cli" type="text" value={inputLine} onChange={e => setInputLine(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { handleCommand(inputLine); setInputLine(''); } }} className="flex-1 bg-transparent border-none outline-none text-white/90 caret-indigo-500 font-mono tracking-wider placeholder-white/5" placeholder="Waiting for directive..." autoFocus autoComplete="off" spellCheck={false} />
                             </div>
                             <div ref={scrollRef} />
                         </div>
@@ -424,9 +614,9 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose, onToggleSnow }) =>
                     {activeTab === 'NETWORK' && <NetworkView />}
                 </div>
             </div>
-            <div className="h-10 flex items-center justify-between px-10 text-[8px] font-bold text-white/5 tracking-[0.4em] uppercase bg-black/40 border-t border-white/5">
-                <div className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,1)]"></div>Core Status: Active</div>
-                <div className="flex gap-8"><button onClick={onToggleSnow} className="hover:text-white/20 transition-colors">Particles</button><span>{new Date().toLocaleTimeString()}</span></div>
+            <div className="h-10 flex items-center justify-between px-10 text-[8px] font-bold text-white/5 tracking-[0.5em] uppercase bg-black/40 border-t border-white/5">
+                <div className="flex items-center gap-3"><div className="w-1 h-1 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,1)]"></div>Environment: Local-Host</div>
+                <div className="flex gap-10"><button onClick={onToggleSnow} className="hover:text-white/20 transition-colors">Toggle FX</button><span>{new Date().toLocaleTimeString()}</span></div>
             </div>
         </div>
     </div>
