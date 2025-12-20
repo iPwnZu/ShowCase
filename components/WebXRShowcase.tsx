@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PROJECTS } from '../constants';
 import { Project } from '../types';
 
@@ -16,6 +16,17 @@ interface WebXRShowcaseProps {
 const WebXRShowcase: React.FC<WebXRShowcaseProps> = ({ onProjectClick, onFeedbackClick }) => {
   const [activeModels, setActiveModels] = useState<Set<string>>(new Set());
   const ModelViewer = 'model-viewer' as any;
+
+  useEffect(() => {
+    // Dynamically load model-viewer to avoid "Multiple instances of Three.js" warning on initial load
+    // and to improve performance if this component is not rendered.
+    if (!document.querySelector('script[src*="model-viewer"]')) {
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js';
+      document.body.appendChild(script);
+    }
+  }, []);
 
   const handleLoadModel = (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation();

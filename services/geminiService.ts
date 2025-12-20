@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -47,11 +48,17 @@ export const verifyFamilyMember = async (member: FamilyMember): Promise<string> 
   
   const ai = new GoogleGenAI({ apiKey });
 
-  const prompt = `Hledej historické, matriční nebo regionální záznamy pro osobu: ${member.name}, narozen ${member.birthDate || 'neznámo'} v lokalitě ${member.birthPlace || 'neznámo'}. 
-  Uveď konkrétní fakta, pokud existují, nebo kontext dané doby a místa, který by mohl pomoci identifikovat tuto osobu v archivech. Buď velmi stručný a profesionální.`;
+  const prompt = `Jsi profesionální genealog. Hledej historické, matriční nebo regionální záznamy pro osobu: ${member.name}, narozen ${member.birthDate || 'neznámo'} v lokalitě ${member.birthPlace || 'neznámo'}. 
+  Pokud máš informace o rodičích (${member.parents.join(', ')}), použij je pro zpřesnění.
+  
+  Úkol:
+  1. Najdi konkrétní záznamy nebo pravděpodobné shody v online archivech (MyHeritage, FamilySearch, regionální matriky).
+  2. Pokud nenajdeš přímou shodu, popiš historický kontext dané lokality v té době (farnost, panství), kde by se mělo hledat.
+  3. Uveď zdroje (URL) pomocí Google Search grounding.
+  `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-2.5-flash',
     contents: prompt,
     config: {
       tools: [{ googleSearch: {} }]
@@ -59,6 +66,59 @@ export const verifyFamilyMember = async (member: FamilyMember): Promise<string> 
   });
 
   return response.text || "V historických záznamech nebyly nalezeny přímé shody.";
+};
+
+export const analyzeDocumentImage = async (imageBase64: string, mimeType: string): Promise<FamilyMember[]> => {
+    const apiKey = process.env.API_KEY;
+    const ai = new GoogleGenAI({ apiKey });
+
+    const schema: Schema = {
+        type: Type.ARRAY,
+        items: {
+            type: Type.OBJECT,
+            properties: {
+                id: { type: Type.STRING },
+                name: { type: Type.STRING },
+                birthDate: { type: Type.STRING },
+                birthPlace: { type: Type.STRING },
+                bio: { type: Type.STRING },
+                parents: { type: Type.ARRAY, items: { type: Type.STRING } }, // Names of parents found
+                role: { type: Type.STRING, description: "Role in document: 'child', 'father', 'mother'" }
+            },
+            required: ["name", "role"]
+        }
+    };
+
+    const prompt = `Analyzuj tento obrázek (pravděpodobně rodný list, oddací list nebo historická listina). 
+    Extrahuj všechny zmíněné osoby a vytvoř z nich strukturovaná data pro rodokmen.
+    Identifikuj hlavní osobu (dítě/ženich/nevěsta) a její rodiče.
+    Pokud datum není přesné, odhadni ho z kontextu dokumentu.`;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+            parts: [
+                { inlineData: { mimeType, data: imageBase64 } },
+                { text: prompt }
+            ]
+        },
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: schema
+        }
+    });
+
+    const rawData = JSON.parse(response.text || "[]");
+    
+    // Post-process to link IDs logically if possible, essentially returning a mini-tree fragment
+    // For now, we return the raw extraction and let the UI handle merging
+    return rawData.map((p: any) => ({
+        ...p,
+        id: p.id || Math.random().toString(36).substr(2, 9),
+        children: [],
+        spouses: [],
+        parents: [] // Reset parents to empty IDs, UI will have to map names to new IDs
+    }));
 };
 
 export const sendMessageToGemini = async (
